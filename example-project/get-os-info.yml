@@ -1,0 +1,48 @@
+---
+- name: Collect macOS system information (stdout only)
+  hosts: localhost
+  connection: local
+  gather_facts: yes
+
+  tasks:
+
+    - name: Donanım bilgisi (system_profiler SPHardwareDataType)
+      command: system_profiler SPHardwareDataType
+      register: hw_info
+      changed_when: false
+
+    - debug:
+        msg: "{{ hw_info.stdout }}"
+
+    - name: Yazılım bilgisi (system_profiler SPSoftwareDataType)
+      command: system_profiler SPSoftwareDataType
+      register: sw_info
+      changed_when: false
+
+    - debug:
+        msg: "{{ sw_info.stdout }}"
+
+    - name: Disk kullanımı (df -h)
+      command: df -h
+      register: disk_info
+      changed_when: false
+
+    - debug:
+        msg: "{{ disk_info.stdout }}"
+
+    - name: Ağ arayüz bilgileri (ifconfig)
+      command: ifconfig
+      register: net_info
+      changed_when: false
+
+    - debug:
+        msg: "{{ net_info.stdout }}"
+
+    - name: Homebrew paket listesi (brew list)
+      command: brew list
+      register: brew_list
+      failed_when: false
+      changed_when: false
+
+    - debug:
+        msg: "{{ brew_list.stdout | default('brew yüklü değil') }}"
