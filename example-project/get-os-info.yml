@@ -1,28 +1,28 @@
 ---
-- name: Collect macOS system information (stdout only)
+- name: Collect Linux system information (stdout only)
   hosts: localhost
   connection: local
   gather_facts: yes
 
   tasks:
 
-    - name: Donanım bilgisi (system_profiler SPHardwareDataType)
-      command: system_profiler SPHardwareDataType
-      register: hw_info
+    - name: CPU bilgisi (lscpu)
+      command: lscpu
+      register: cpu_info
       changed_when: false
 
     - debug:
-        msg: "{{ hw_info.stdout }}"
+        msg: "{{ cpu_info.stdout }}"
 
-    - name: Yazılım bilgisi (system_profiler SPSoftwareDataType)
-      command: system_profiler SPSoftwareDataType
-      register: sw_info
+    - name: Memory bilgisi (free -h)
+      command: free -h
+      register: mem_info
       changed_when: false
 
     - debug:
-        msg: "{{ sw_info.stdout }}"
+        msg: "{{ mem_info.stdout }}"
 
-    - name: Disk kullanımı (df -h)
+    - name: Disk bilgisi (df -h)
       command: df -h
       register: disk_info
       changed_when: false
@@ -30,19 +30,52 @@
     - debug:
         msg: "{{ disk_info.stdout }}"
 
-    - name: Ağ arayüz bilgileri (ifconfig)
-      command: ifconfig
+    - name: OS release bilgisi (/etc/os-release)
+      command: cat /etc/os-release
+      register: os_info
+      changed_when: false
+
+    - debug:
+        msg: "{{ os_info.stdout }}"
+
+    - name: Network interface bilgisi (ip a)
+      command: ip a
       register: net_info
       changed_when: false
 
     - debug:
         msg: "{{ net_info.stdout }}"
 
-    - name: Homebrew paket listesi (brew list)
-      command: brew list
-      register: brew_list
-      failed_when: false
+    - name: Routing tablosu (ip route)
+      command: ip route
+      register: route_info
       changed_when: false
 
     - debug:
-        msg: "{{ brew_list.stdout | default('brew yüklü değil') }}"
+        msg: "{{ route_info.stdout }}"
+
+    - name: Yüklü paketler (debian tabanlı ise dpkg -l)
+      command: dpkg -l
+      register: pkg_deb
+      changed_when: false
+      failed_when: false
+
+    - debug:
+        msg: "{{ pkg_deb.stdout | default('dpkg yok (muhtemelen alpine/centos)') }}"
+
+    - name: Yüklü paketler (rpm tabanlı ise rpm -qa)
+      command: rpm -qa
+      register: pkg_rpm
+      changed_when: false
+      failed_when: false
+
+    - debug:
+        msg: "{{ pkg_rpm.stdout | default('rpm yok (muhtemelen debian/alpine)') }}"
+
+    - name: Process list (ps aux)
+      command: ps aux
+      register: ps_info
+      changed_when: false
+
+    - debug:
+        msg: "{{ ps_info.stdout }}"
